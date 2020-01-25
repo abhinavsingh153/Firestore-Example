@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,12 +8,6 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:layout_centerInParent="true"
-        android:orientation="vertical">
 
     <EditText
         android:id="@+id/edit_text_title"
@@ -33,6 +27,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Save"/>
+
+        <Button
+            android:id="@+id/load_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Load"/>
+
+        <TextView
+            android:id="@+id/text_view_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:height="30sp"/>
+
     </LinearLayout>
 
-</RelativeLayout>

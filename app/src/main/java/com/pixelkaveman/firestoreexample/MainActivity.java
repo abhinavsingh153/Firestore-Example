@@ -4,13 +4,17 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -25,9 +29,12 @@ public class MainActivity extends AppCompatActivity {
     private EditText editTextTitle;
     private EditText editTextDescription;
     private Button buttonSave;
+    private Button buttonLoad;
+    private TextView textViewData;
 
     // cretae a varibale which will be aused as a reference to our firestore database
     FirebaseFirestore db = FirebaseFirestore.getInstance().getInstance();
+    DocumentReference noteRef = db.collection("Notebook").document("My first note");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,12 +44,24 @@ public class MainActivity extends AppCompatActivity {
         editTextTitle = findViewById(R.id.edit_text_title);
         editTextDescription = findViewById(R.id.edit_text_description);
         buttonSave = findViewById(R.id.save_btn);
+        buttonLoad = findViewById(R.id.load_btn);
+        textViewData = findViewById(R.id.text_view_data);
 
         buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // create collection and save the data on firestore
                 saveNote();
+            }
+        });
+
+        //load button click
+        buttonLoad.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // load dtaata from firestore collections or documents
+
+                loadNote();
             }
         });
     }
@@ -58,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
         //implicitly crete the collection and
         //inside the clollection store a document
-        db.collection("Notebook").document("My first note").set(note)
+        noteRef.set(note)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -74,5 +93,35 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+    }
+
+    private void loadNote(){
+
+
+        noteRef.get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                        //Chaeck if the document snapshot exists
+                        if(documentSnapshot.exists()){
+                            // poultae the textViewData with the title snd description data
+                            String title = documentSnapshot.getString(KEY_TITLE);
+                            String description = documentSnapshot.getString(KEY_DESCRIPTION);
+
+                            textViewData.setText("Title: " + title + "\n" + "Description: " + description);
+;                        }
+                        else {
+                            Toast.makeText(MainActivity.this , "Documnet does'nt exist.",Toast.LENGTH_LONG).show();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainActivity.this , "Error!",Toast.LENGTH_LONG).show();
+                        Log.d(TAG , e.toString());
+                    }
+                });
     }
 }
