@@ -1,6 +1,7 @@
 package com.pixelkaveman.firestoreexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -15,7 +16,10 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     // cretae a varibale which will be aused as a reference to our firestore database
     FirebaseFirestore db = FirebaseFirestore.getInstance().getInstance();
     DocumentReference noteRef = db.collection("Notebook").document("My first note");
+    private ListenerRegistration noteListener ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +69,42 @@ public class MainActivity extends AppCompatActivity {
                 loadNote();
             }
         });
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // listen to the changes in the firestore database in reltime.
+
+        noteListener =noteRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+
+                if(e != null){
+                    Toast.makeText(MainActivity.this, "Error while loading!" , Toast.LENGTH_LONG).show();
+                    Log.d(TAG , e.toString());
+                    return;
+                }
+
+                //Chaeck if the document snapshot exists
+                if(documentSnapshot.exists()){
+                    // poultae the textViewData with the title snd description data
+                    String title = documentSnapshot.getString(KEY_TITLE);
+                    String description = documentSnapshot.getString(KEY_DESCRIPTION);
+
+                    textViewData.setText("Title: " + title + "\n" + "Description: " + description);
+                    ;                        }
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // detaching the noteListener in on Stop
+        noteListener.remove();
     }
 
     private void saveNote(){
