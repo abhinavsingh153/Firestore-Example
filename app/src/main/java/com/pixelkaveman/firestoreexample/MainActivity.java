@@ -30,11 +30,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String TAG = "MainActivity";
-
-    private static final String KEY_TITLE = "title";
-    private static final String KEY_DESCRIPTION = "description";
-
+    private static String TAG = "MainActivity";
     private EditText editTextTitle;
     private EditText editTextDescription;
     private EditText editTextPriority;
@@ -44,7 +40,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private CollectionReference notebookRef = db.collection("Notebook");
-    private DocumentReference noteRef = db.document("Notebook/My First Note");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,37 +55,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         buttonSave.setOnClickListener(this);
         buttonLoad.setOnClickListener(this);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        notebookRef.addSnapshotListener(this, new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
-                if (e != null) {
-                    return;
-                }
-
-                String data = "";
-
-                for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                    Note note = documentSnapshot.toObject(Note.class);
-                    note.setDocumentId(documentSnapshot.getId());
-
-                    String documentId = note.getDocumentId();
-                    String title = note.getTitle();
-                    String description = note.getDescription();
-                    int priority = note.getPriority();
-
-                    data += "Id: " + note.getDocumentId() + "\ntitle: " + note.getTitle()
-                            + "\nDescription: " + note.getDescription()
-                            + "\nPriority: " + priority + "\n\n";
-                }
-
-                textViewData.setText(data);
-            }
-        });
     }
 
     public void saveNotes() {
@@ -116,53 +80,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Toast.makeText(MainActivity.this, "Error !", Toast.LENGTH_LONG).show();
-                        Log.d(TAG, e.toString());
+                        //Log.d(TAG, e.toString());
                     }
                 });
     }
 
     public void loadNotes() {
 
-        //TODO:load notes where the priority !=2
+      notebookRef.orderBy("priority")
+              .orderBy("title")
+              .startAt(3 , "Title2") // will start form priority =3
+              .get()
+              .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                  @Override
+                  public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
 
-        //
-        Task task1 = notebookRef.whereLessThan("priority", 2)
-                //.whereEqualTo("title" , "Aa")
-                .orderBy("priority")
-                .get();
+                      String data  = "";
 
-        Task task2 = notebookRef.whereGreaterThan("priority", 2)
-                .orderBy("priority")
-                .get();
+                      for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots){
 
-        // combining the above two queries
-        //into a third query
-        // and store it in a task
+                          Note note = documentSnapshot.toObject(Note.class);
+                          note.setDocumentId(documentSnapshot.getId());
 
-        Task<List<QuerySnapshot>> allTasks = Tasks.whenAllSuccess(task1, task2);
+                          String title = note.getTitle();
+                          String description = note.getDescription();
+                          int priority = note.getPriority();
 
-        allTasks.addOnSuccessListener(new OnSuccessListener<List<QuerySnapshot>>() {
-            @Override
-            public void onSuccess(List<QuerySnapshot> querySnapshots) {
-                String data = "";
 
-                for (QuerySnapshot queryDocumentSnapshots : querySnapshots) {
-                    for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                          data+= "Id : " + note.getDocumentId() + "\nTitle: " + title + "\nDescription: " + description
+                                  + "\nPriority: " + priority + "\n\n";
+                      }
 
-                        Note note = documentSnapshot.toObject(Note.class);
-                        note.setDocumentId(documentSnapshot.getId());
-                        int priority = note.getPriority();
-
-                        data += "Id: " + note.getDocumentId() + "\ntitle: " + note.getTitle()
-                                + "\nDescription: " + note.getDescription()
-                                + "\nPriority: " + priority + "\n\n";
-
-                    }
-                }
-
-                textViewData.setText(data);
-            }
-        });
+                      textViewData.setText(data);
+                  }
+              })
+      .addOnFailureListener(new OnFailureListener() {
+          @Override
+          public void onFailure(@NonNull Exception e) {
+              Log.d(TAG , e.toString());
+          }
+      });
 
 
     }
@@ -182,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
             default:
-                Log.d(TAG, v.getId() + "Button not found");
+                //Log.d(TAG, v.getId() + "Button not found");
 
 
         }
