@@ -41,6 +41,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private CollectionReference notebookRef = db.collection("Notebook");
 
+    //TODO: Create Document snapshot for storing the last document snapshot for implementiing pagination
+    private DocumentSnapshot lastResult;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,39 +90,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void loadNotes() {
 
-      notebookRef.orderBy("priority")
-              .orderBy("title")
-              .startAt(3 , "Title2") // will start form priority =3
-              .get()
-              .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
-                  @Override
-                  public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+        //TODO: build logic for pagination
+        Query query;
 
-                      String data  = "";
+        if (lastResult == null) {
 
-                      for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots){
+            query = notebookRef.orderBy("priority")
+                    .limit(3);
+        } else {
 
-                          Note note = documentSnapshot.toObject(Note.class);
-                          note.setDocumentId(documentSnapshot.getId());
+            query = notebookRef.orderBy("priority")
+                    .startAfter(lastResult)
+                    .limit(3);
+        }
 
-                          String title = note.getTitle();
-                          String description = note.getDescription();
-                          int priority = note.getPriority();
+        query.get()
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                        String data = "";
+
+                        for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+
+                            Note note = documentSnapshot.toObject(Note.class);
+                            note.setDocumentId(documentSnapshot.getId());
+
+                            String title = note.getTitle();
+                            String description = note.getDescription();
+                            int priority = note.getPriority();
 
 
-                          data+= "Id : " + note.getDocumentId() + "\nTitle: " + title + "\nDescription: " + description
-                                  + "\nPriority: " + priority + "\n\n";
-                      }
+                            data += "\nId : " + note.getDocumentId() + "\nTitle: " + title + "\nDescription: " + description
+                                    + "\nPriority: " + priority + "\n\n";
+                        }
 
-                      textViewData.setText(data);
-                  }
-              })
-      .addOnFailureListener(new OnFailureListener() {
-          @Override
-          public void onFailure(@NonNull Exception e) {
-              Log.d(TAG , e.toString());
-          }
-      });
+                        if (queryDocumentSnapshots.size() > 0) {
+                            data += "__________";
+                            textViewData.append(data);
+
+                            //store the reference of the last documentSnapshot
+                            //in lastResult variable.
+                            lastResult = queryDocumentSnapshots.getDocuments()
+                                    .get(queryDocumentSnapshots.size() - 1);
+                        }
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+
+                    }
+                });
 
 
     }
