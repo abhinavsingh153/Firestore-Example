@@ -178,17 +178,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void executeTransaction(){
 
-        db.runTransaction(new Transaction.Function<Void>() {
+        db.runTransaction(new Transaction.Function<Long>() {
 
             @Nullable
             @Override
-            public Void apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
+            public Long apply(@NonNull Transaction transaction) throws FirebaseFirestoreException {
 
                 DocumentReference exampleNoteRef = notebookRef.document("New Note");
                 DocumentSnapshot documentSnapshot =transaction.get(exampleNoteRef);
                 long newPriority = documentSnapshot.getLong("priority") + 1;
                 transaction.update(exampleNoteRef , "priority" , newPriority);
-                return null;
+                return newPriority;
+            }
+        }).addOnSuccessListener(new OnSuccessListener<Long>() {
+            @Override
+            public void onSuccess(Long result) {
+                Toast.makeText(MainActivity.this , "New priority: " + result ,Toast.LENGTH_LONG).show();
             }
         });
     }
