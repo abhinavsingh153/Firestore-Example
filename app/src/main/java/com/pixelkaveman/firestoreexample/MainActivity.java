@@ -1,6 +1,7 @@
 package com.pixelkaveman.firestoreexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -58,6 +60,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         buttonSave.setOnClickListener(this);
         buttonLoad.setOnClickListener(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        notebookRef.addSnapshotListener(this, new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+
+                if(e != null ){
+                    Log.d(TAG , e.toString());
+                    return;
+                }
+
+                for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()){
+
+                    // every time we are getting a document change
+                    //we want to update the change in the textView
+                    DocumentSnapshot documentSnapshot = dc.getDocument();
+                    String id  = documentSnapshot.getId();
+                    int oldIndex = dc.getOldIndex();
+                    int newIndex = dc.getNewIndex();
+
+                        switch (dc.getType()){
+
+                            case ADDED: textViewData.append("\nAdded: " + id +
+                                    "\nOld Index: " + oldIndex + "\nNew Index: " + newIndex);
+                            break;
+
+                            case MODIFIED: textViewData.append("\nModified: " + id +
+                                    "\nOld Index: " + oldIndex + "\nNew Index: " + newIndex);
+                                break;
+
+                            case REMOVED: textViewData.append("\nRemoved: " + id +
+                                    "\nOld Index: " + oldIndex + "\nNew Index: " + newIndex);
+                                break;
+                        }
+                }
+            }
+        });
     }
 
     public void saveNotes() {
