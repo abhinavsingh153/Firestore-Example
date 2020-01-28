@@ -1,12 +1,20 @@
 package com.pixelkaveman.firestoreexample;
 
 import com.google.firebase.firestore.Exclude;
+import com.google.firebase.firestore.PropertyName;
 
 public class Note {
 
+    @PropertyName("id")
     private String documentId;
+
+    @PropertyName("title")
     private String title;
+
+    @PropertyName("description")
     private String description;
+
+    @PropertyName("priority")
     private int priority;
 
     public Note() {

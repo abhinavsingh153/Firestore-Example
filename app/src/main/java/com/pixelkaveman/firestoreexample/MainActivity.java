@@ -119,9 +119,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void loadNotes() {
        notebookRef
-               .whereGreaterThanOrEqualTo("d" , 2)
-               .orderBy("d" , Query.Direction.DESCENDING)
-               .limit(2)
+               .whereGreaterThanOrEqualTo("priority" , 2)
+               //.whereEqualTo("title" , "Aa")
+               .orderBy("priority")
+               .orderBy("title")
+               .limit(1)
                .get()
                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                    @Override
@@ -148,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                .addOnFailureListener(new OnFailureListener() {
                    @Override
                    public void onFailure(@NonNull Exception e) {
-
+                    Log.d(TAG , e.toString());
                    }
                });
     }
