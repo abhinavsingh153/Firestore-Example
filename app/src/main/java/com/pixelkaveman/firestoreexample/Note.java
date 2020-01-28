@@ -1,22 +1,24 @@
 package com.pixelkaveman.firestoreexample;
 
+import com.google.firebase.firestore.Exclude;
+
 public class Note {
 
-        private String documentId;
-        private String title;
-        private String description;
+    private String documentId;
+    private String title;
+    private String description;
 
-        public Note() {
-            //public no-arg constructor needed
-        }
-
+    public Note() {
+        //public no-arg constructor needed
+    }
 
 
     public Note(String title, String description) {
-            this.title = title;
-            this.description = description;
-        }
+        this.title = title;
+        this.description = description;
+    }
 
+    @Exclude
     public String getDocumentId() {
         return documentId;
     }
@@ -25,11 +27,11 @@ public class Note {
         this.documentId = documentId;
     }
 
-        public String getTitle() {
-            return title;
-        }
+    public String getTitle() {
+        return title;
+    }
 
-        public String getDescription() {
-            return description;
-        }
+    public String getDescription() {
+        return description;
+    }
 }
