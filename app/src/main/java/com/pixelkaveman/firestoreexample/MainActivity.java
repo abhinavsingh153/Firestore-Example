@@ -20,6 +20,7 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private EditText editTextTitle;
     private EditText editTextDescription;
+    private EditText editTextPriority;
     private TextView textViewData;
     private Button buttonSave;
     private Button buttonLoad;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         editTextTitle = findViewById(R.id.edit_text_title);
         editTextDescription = findViewById(R.id.edit_text_description);
+        editTextPriority = findViewById(R.id.edit_text_priority);
         textViewData = findViewById(R.id.text_view_data);
         buttonSave = findViewById(R.id.save_btn);
         buttonLoad = findViewById(R.id.load_btn);
@@ -74,8 +77,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     String documentId = note.getDocumentId();
                     String title = note.getTitle();
                     String description = note.getDescription();
+                    int priority = note.getPriority();
 
-                    data += "Id: " + documentId +"\nTitle: " + title + "\nDescription: " + description + "\n\n";
+                    data += "Id: " + note.getDocumentId() + "\ntitle: " + note.getTitle()
+                            + "\nDescription: " + note.getDescription()
+                            + "\nPriority: " + priority +"\n\n";
                 }
 
                 textViewData.setText(data);
@@ -87,7 +93,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String title = editTextTitle.getText().toString();
         String description = editTextDescription.getText().toString();
 
-        Note note = new Note(title, description);
+        if (editTextPriority.getText().length() == 0){
+            editTextPriority.setText("0");
+        }
+
+        int priority = Integer.parseInt(editTextPriority.getText().toString());
+
+        Note note = new Note(title, description , priority);
 
         notebookRef.add(note)
         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -106,7 +118,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void loadNotes() {
-       notebookRef.get()
+       notebookRef
+               .whereGreaterThanOrEqualTo("d" , 2)
+               .orderBy("d" , Query.Direction.DESCENDING)
+               .limit(2)
+               .get()
                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
                    @Override
                    public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
@@ -117,9 +133,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                            Note note = documentSnapshot.toObject(Note.class);
                            note.setDocumentId(documentSnapshot.getId());
+                           int priority = note.getPriority();
 
                            data += "Id: " + note.getDocumentId() + "\ntitle: " + note.getTitle()
-                                   + "\nDescription: " + note.getDescription()+  "\n\n";
+                                   + "\nDescription: " + note.getDescription()
+                                   + "\nPriority: " + priority +"\n\n";
 
                        }
 
