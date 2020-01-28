@@ -27,6 +27,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.List;
 
@@ -60,47 +61,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         buttonSave.setOnClickListener(this);
         buttonLoad.setOnClickListener(this);
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        notebookRef.addSnapshotListener(this, new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-
-                if(e != null ){
-                    Log.d(TAG , e.toString());
-                    return;
-                }
-
-                for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()){
-
-                    // every time we are getting a document change
-                    //we want to update the change in the textView
-                    DocumentSnapshot documentSnapshot = dc.getDocument();
-                    String id  = documentSnapshot.getId();
-                    int oldIndex = dc.getOldIndex();
-                    int newIndex = dc.getNewIndex();
-
-                        switch (dc.getType()){
-
-                            case ADDED: textViewData.append("\nAdded: " + id +
-                                    "\nOld Index: " + oldIndex + "\nNew Index: " + newIndex);
-                            break;
-
-                            case MODIFIED: textViewData.append("\nModified: " + id +
-                                    "\nOld Index: " + oldIndex + "\nNew Index: " + newIndex);
-                                break;
-
-                            case REMOVED: textViewData.append("\nRemoved: " + id +
-                                    "\nOld Index: " + oldIndex + "\nNew Index: " + newIndex);
-                                break;
-                        }
-                }
-            }
-        });
+        executeBatchedWrite();
     }
 
     public void saveNotes() {
@@ -187,6 +149,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
 
 
+    }
+
+    public void executeBatchedWrite(){
+
+        WriteBatch batch = db.batch();
+        DocumentReference doc1 = notebookRef.document("New Note");
+        batch.set(doc1 , new Note("New Note" , "New Note" , 1));
+
+        DocumentReference doc2 = notebookRef.document("N8wuHFrWnyelWTbZpwrW");
+        batch.update(doc2 , "title"  , "Updated Note");
+
+        DocumentReference doc3 = notebookRef.document("05TGb6g9R65eXd6OLl3B");
+        batch.delete(doc3);
+
+        DocumentReference doc4 = notebookRef.document();
+        batch.set(doc4 , new Note("Added note" , "Added Note" , 1));
+
+        batch.commit().addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+             textViewData.setText(e.toString());
+            }
+        });
     }
 
     @Override
